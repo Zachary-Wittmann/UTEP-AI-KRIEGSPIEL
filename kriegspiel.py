@@ -22,6 +22,7 @@ class GameState:
                 piece = self.board[row][col]
                 if piece.startswith(player):
                     legal_moves.extend(self._get_piece_moves(piece, row, col))
+        #print(legal_moves)
         return legal_moves
 
     def _get_piece_moves(self, piece, row, col):
@@ -31,7 +32,7 @@ class GameState:
             moves = self._get_pawn_moves(row, col, piece.startswith("W"))
         elif "N" in piece:
             moves = self._get_knight_moves(row, col)
-        elif "B" in piece:
+        elif "A" in piece:
             moves = self._get_bishop_moves(row, col)
         elif "R" in piece:
             moves = self._get_rook_moves(row, col)
@@ -39,6 +40,8 @@ class GameState:
             moves = self._get_queen_moves(row, col)
         elif "K" in piece:
             moves = self._get_king_moves(row, col)
+        #print(piece, moves)
+        #print("end")
         return moves
 
     def _get_pawn_moves(self, row, col, is_white):
@@ -87,9 +90,10 @@ class GameState:
             nr, nc = row, col
             while True:
                 nr, nc = nr + dr, nc + dc
-                if 0 <= nr < 8 and 0 <= nc < 8:
+                while 0 <= nr < 8 and 0 <= nc < 8:
                     if self.board[nr][nc] == ".":
                         moves.append((row, col, nr, nc))
+                        break
                     elif self.board[nr][nc].startswith(self.current_player):
                         break
                     else:
@@ -105,9 +109,10 @@ class GameState:
             nr, nc = row, col
             while True:
                 nr, nc = nr + dr, nc + dc
-                if 0 <= nr < 8 and 0 <= nc < 8:
+                while 0 <= nr < 8 and 0 <= nc < 8:
                     if self.board[nr][nc] == ".":
                         moves.append((row, col, nr, nc))
+                        break
                     elif self.board[nr][nc].startswith(self.current_player):
                         break
                     else:
@@ -234,6 +239,8 @@ class MCTS:
                 break
             move = random.choice(moves)
             current_state = current_state.make_move(move)
+            #print("")
+            #print(state)
         return current_state.evaluate(state.current_player)
 
     def _backpropagate(self, node, reward):
@@ -246,11 +253,11 @@ class MCTS:
 
 # Example Usage
 if __name__ == "__main__":
-    state = GameState(board_file="boards/test3.txt")
+    state = GameState(board_file="boards/test2.txt")
     print("Initial Board State:")
     print(state)
 
     mcts = MCTS()
-    best_state = mcts.search(state, simulations=100)
+    best_state = mcts.search(state, simulations=1)
     print("\nBest Move Board State:")
     print(best_state)
