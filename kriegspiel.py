@@ -28,17 +28,17 @@ class GameState:
     def _get_piece_moves(self, piece, row, col):
         """Get legal moves for a specific piece."""
         moves = []
-        if "P" in piece:
+        if "P" in piece: # pawn
             moves = self._get_pawn_moves(row, col, piece.startswith("W"))
-        elif "N" in piece:
+        elif "N" in piece: # knight
             moves = self._get_knight_moves(row, col)
-        elif "A" in piece:
+        elif "A" in piece: # bishop
             moves = self._get_bishop_moves(row, col)
-        elif "R" in piece:
+        elif "R" in piece: # rook
             moves = self._get_rook_moves(row, col)
-        elif "Q" in piece:
+        elif "Q" in piece: # queen
             moves = self._get_queen_moves(row, col)
-        elif "K" in piece:
+        elif "K" in piece: # king
             moves = self._get_king_moves(row, col)
         #print(piece, moves)
         #print("end")
@@ -75,7 +75,7 @@ class GameState:
             (-2, -1),
         ]
         for dr, dc in knight_deltas:
-            nr, nc = row + dr, col + dc
+            nr, nc = row + dr, col + dc # nr, nc = new row, new column
             if (
                 0 <= nr < 8
                 and 0 <= nc < 8
