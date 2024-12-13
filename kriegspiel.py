@@ -149,7 +149,7 @@ class GameState:
     
     def is_king_in_check(self):
         """Check if the king is in check."""
-        opponent_player = 'W' if self.current_player == 'W' else 'B'
+        opponent_player = 'W' if self.current_player == 'B' else 'B'
         king_row, king_col = None, None
         for row in range(8):
             for col in range(8):
@@ -159,36 +159,95 @@ class GameState:
         if king_row is None or king_col is None:
             return False
  
-        knight_moves = self._get_knight_moves(king_row, king_col)
-        for move in knight_moves:
-            if move[2] == king_row and move[3] == king_col:
-                return True
+        knight_row, knight_col = None, None
+        bishop_row, bishop_col = None, None
+        rook_row, rook_col = None, None
+        queen_row, queen_col = None, None
+        pawn_row, pawn_col = None, None
  
-        pawn_moves = []
-        if opponent_player == 'W':
-            pawn_moves = self._get_pawn_moves(king_row, king_col, True)
-        else:
-            pawn_moves = self._get_pawn_moves(king_row, king_col, False)
-        for move in pawn_moves:
-            if move[2] == king_row and move[3] == king_col:
-                return True
-        bishop_moves = self._get_bishop_moves(king_row, king_col)
-        for move in bishop_moves:
-            if move[2] == king_row and move[3] == king_col:
-                return True
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == self.current_player + 'N':
+                    knight_row, knight_col = row, col
+                    break
  
-        rook_moves = self._get_rook_moves(king_row, king_col)
-        for move in rook_moves:
-            if move[2] == king_row and move[3] == king_col:
-                return True
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == self.current_player + 'A':
+                    bishop_row, bishop_col = row, col
+                    break
  
-        queen_moves = self._get_queen_moves(king_row, king_col)
-        for move in queen_moves:
-            if move[2] == king_row and move[3] == king_col:
-                return True
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == self.current_player + 'R':
+                    rook_row, rook_col = row, col
+                    break
  
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == self.current_player + 'Q':
+                    queen_row, queen_col = row, col
+                    break
+ 
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == self.current_player + 'P':
+                    pawn_row, pawn_col = row, col
+                    break
+ 
+        if knight_row is not None and knight_col is not None:
+            knight_moves = self._get_knight_moves(knight_row, knight_col)
+            for move in knight_moves:
+                if move[2] == king_row and move[3] == king_col:
+                    return True
+ 
+        if pawn_row is not None and pawn_col is not None:
+            pawn_moves = []
+            if opponent_player == 'W':
+                pawn_moves = self._get_pawn_moves(pawn_row, pawn_col, True)
+            else:
+                pawn_moves = self._get_pawn_moves(pawn_row, pawn_col, False)
+            for move in pawn_moves:
+                if move[2] == king_row and move[3] == king_col:
+                    return True
+ 
+        if bishop_row is not None and bishop_col is not None:
+            bishop_moves = self._get_bishop_moves(bishop_row, bishop_col)
+            for move in bishop_moves:
+                if move[2] == king_row and move[3] == king_col:
+                    return True
+ 
+        if rook_row is not None and rook_col is not None:
+            rook_moves = self._get_rook_moves(rook_row, rook_col)
+            for move in rook_moves:
+                if move[2] == king_row and move[3] == king_col:
+                    return True
+ 
+        if queen_row is not None and queen_col is not None:
+            queen_moves = self._get_queen_moves(queen_row, queen_col)
+            for move in queen_moves:
+                if move[2] == king_row and move[3] == king_col:
+                    return True
         return False
-
+    
+    def stalemate(self):
+        """Check if the game is in a stalemate."""
+        opponent_player = 'W' if self.current_player == 'B' else 'B'
+        king_row, king_col = None, None
+        if self.is_king_in_check() == False:
+            for row in range(8):
+                for col in range(8):
+                    if self.board[row][col] == opponent_player + 'K':
+                        king_row, king_col = row, col
+                        break
+            if king_row is None or king_col is None:
+                return False
+        if self._get_king_moves(king_row, king_col) == []:
+            return True
+        elif self.get_legal_moves(self.current_player) == []:
+            return True
+        else:
+            return False
 
     def make_move(self, move):
         """Apply a move to the board and return a new game state."""
@@ -217,9 +276,59 @@ class GameState:
 
     def __str__(self):
         """Return a string representation of the board."""
-        print(self.is_king_in_check())
+        print(self.stalemate())
         return "\n".join([" ".join(row) for row in self.board])
 
+class Player:
+    def __init__(self, player, board_file=None):
+        self.player_pieces = [] # available player pieces
+        self.board = []
+        self.player = player # player = "white", player = "black"
+        if board_file:
+            self.load_board_from_file(board_file)
+    
+    def load_board_from_file(self, board_file):
+        """Load the board from a .txt file. Parse from opponent pieces"""
+        with open(board_file, "r") as file:
+            #self.board = [line.strip().split() for line in file.readlines()]
+            board = []
+            player_pieces = []
+            for line in file.readlines():
+                pieces = line.split()
+                for i in range(len(pieces)):
+                    if self.player == "W":
+                        player_pieces.append(pieces)
+                        if pieces[i][0] == 'B':
+                            pieces[i] = 'O'
+                    if self.player == "B":
+                        player_pieces.append(pieces)
+                        if pieces[i][0] == 'W':
+                            pieces[i] = 'O'
+                board.append(pieces)
+            self.board = board
+            self.player_pieces = player_pieces
+        return self.board , self.player_pieces
+
+    def choose_piece_human(self): # human chooses piece
+        piece = input("Choose a piece to move.")
+        return piece
+    
+    def choose_piece_pc(self):  # computer chooses piece
+        piece = random.choice(self.player_pieces)
+        return piece
+
+    def make_move_human(self, piece): # human move
+        move_row, move_column = map(int, input("Enter "+piece+" move(row, column, ex: 4 5):").split())
+        return move_row, move_column
+    
+    def make_move_pc(self): # computer move
+        move_row = 0 # current placeholder
+        move_column = 0 # current placeholder
+        return move_row, move_column
+
+    def __str__(self):
+        """Return a string representation of the board."""
+        return "\n".join([" ".join(row) for row in self.board])
 
 class MCTSNode:
     def __init__(self, state, parent=None):
