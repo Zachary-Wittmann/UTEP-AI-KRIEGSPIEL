@@ -146,6 +146,49 @@ class GameState:
             ):
                 moves.append((row, col, nr, nc))
         return moves
+    
+    def is_king_in_check(self):
+        """Check if the king is in check."""
+        opponent_player = 'W' if self.current_player == 'W' else 'B'
+        king_row, king_col = None, None
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == opponent_player + 'K':
+                    king_row, king_col = row, col
+                    break
+        if king_row is None or king_col is None:
+            return False
+ 
+        knight_moves = self._get_knight_moves(king_row, king_col)
+        for move in knight_moves:
+            if move[2] == king_row and move[3] == king_col:
+                return True
+ 
+        pawn_moves = []
+        if opponent_player == 'W':
+            pawn_moves = self._get_pawn_moves(king_row, king_col, True)
+        else:
+            pawn_moves = self._get_pawn_moves(king_row, king_col, False)
+        for move in pawn_moves:
+            if move[2] == king_row and move[3] == king_col:
+                return True
+        bishop_moves = self._get_bishop_moves(king_row, king_col)
+        for move in bishop_moves:
+            if move[2] == king_row and move[3] == king_col:
+                return True
+ 
+        rook_moves = self._get_rook_moves(king_row, king_col)
+        for move in rook_moves:
+            if move[2] == king_row and move[3] == king_col:
+                return True
+ 
+        queen_moves = self._get_queen_moves(king_row, king_col)
+        for move in queen_moves:
+            if move[2] == king_row and move[3] == king_col:
+                return True
+ 
+        return False
+
 
     def make_move(self, move):
         """Apply a move to the board and return a new game state."""
@@ -174,6 +217,7 @@ class GameState:
 
     def __str__(self):
         """Return a string representation of the board."""
+        print(self.is_king_in_check())
         return "\n".join([" ".join(row) for row in self.board])
 
 
@@ -253,7 +297,7 @@ class MCTS:
 
 # Example Usage
 if __name__ == "__main__":
-    state = GameState(board_file="boards/test2.txt")
+    state = GameState(board_file="boards/test1.txt")
     print("Initial Board State:")
     print(state)
 
