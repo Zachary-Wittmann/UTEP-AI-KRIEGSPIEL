@@ -5,9 +5,11 @@ from copy import deepcopy
 class GameState:
     def __init__(self, board_file=None):
         self.board = []
+        self.board_pieces = []
         self.current_player = "W"  # White starts the game by default
         if board_file:
             self.load_board_from_file(board_file)
+            self._get_board()
 
     def load_board_from_file(self, board_file):
         """Load the board from a .txt file."""
@@ -24,6 +26,15 @@ class GameState:
                     legal_moves.extend(self._get_piece_moves(piece, row, col))
         #print(legal_moves)
         return legal_moves
+    
+    def _get_board(self):
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] != 'O':
+                    self.board_pieces.append([row, col])
+                else:
+                    pass
+        return self.board_pieces
 
     def _get_piece_moves(self, piece, row, col):
         """Get legal moves for a specific piece."""
@@ -91,6 +102,9 @@ class GameState:
             while True:
                 nr, nc = nr + dr, nc + dc
                 while 0 <= nr < 8 and 0 <= nc < 8:
+                    if [nr, nc] in self.board_pieces:
+                        nr = 9
+                        break
                     if self.board[nr][nc] == ".":
                         moves.append((row, col, nr, nc))
                         break
@@ -110,6 +124,9 @@ class GameState:
             while True:
                 nr, nc = nr + dr, nc + dc
                 while 0 <= nr < 8 and 0 <= nc < 8:
+                    if [nr, nc] in self.board_pieces:
+                        nr = 9
+                        break
                     if self.board[nr][nc] == ".":
                         moves.append((row, col, nr, nc))
                         break
@@ -120,6 +137,7 @@ class GameState:
                         break
                 else:
                     break
+        #print(moves)
         return moves
 
     def _get_queen_moves(self, row, col):
@@ -242,12 +260,9 @@ class GameState:
                         break
             if king_row is None or king_col is None:
                 return False
-        if self._get_king_moves(king_row, king_col) == []:
-            return True
-        elif self.get_legal_moves(self.current_player) == []:
-            return True
-        else:
-            return False
+            if self.get_legal_moves(opponent_player) == []:
+                return True
+        return False
 
     def make_move(self, move):
         """Apply a move to the board and return a new game state."""
@@ -268,6 +283,8 @@ class GameState:
 
     def evaluate(self, player):
         """Evaluate the game from the player's perspective."""
+        if self.is_king_in_check():
+            return -1 if player == "W" else 1
         if not any("WK" in row for row in self.board):
             return -1 if player == "W" else 1
         if not any("BK" in row for row in self.board):
@@ -276,13 +293,15 @@ class GameState:
 
     def __str__(self):
         """Return a string representation of the board."""
-        print(self.stalemate())
+        #print(self.stalemate())
+        #print(self.board_pieces)
         return "\n".join([" ".join(row) for row in self.board])
 
 class Player:
     def __init__(self, player, board_file=None):
         self.player_pieces = [] # available player pieces
         self.board = []
+        self.board_pieces = []
         self.player = player # player = "white", player = "black"
         if board_file:
             self.load_board_from_file(board_file)
@@ -325,10 +344,15 @@ class Player:
         move_row = 0 # current placeholder
         move_column = 0 # current placeholder
         return move_row, move_column
-
-    def __str__(self):
-        """Return a string representation of the board."""
-        return "\n".join([" ".join(row) for row in self.board])
+    
+    def _get_board(self):
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] != 'O':
+                    self.board_pieces.append([row, col])
+                else:
+                    pass
+        return self.board_pieces
 
 class MCTSNode:
     def __init__(self, state, parent=None):
@@ -406,11 +430,11 @@ class MCTS:
 
 # Example Usage
 if __name__ == "__main__":
-    state = GameState(board_file="boards/test1.txt")
+    state = GameState(board_file="boards/test3.txt")
     print("Initial Board State:")
     print(state)
 
     mcts = MCTS()
-    best_state = mcts.search(state, simulations=1)
+    best_state = mcts.search(state, simulations=5000)
     print("\nBest Move Board State:")
     print(best_state)

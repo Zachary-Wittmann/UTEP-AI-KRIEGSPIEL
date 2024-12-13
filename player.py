@@ -5,6 +5,7 @@ class Player:
     def __init__(self, player, board_file=None):
         self.player_pieces = [] # available player pieces
         self.board = []
+        self.board_pieces = []
         self.player = player # player = "white", player = "black"
         if board_file:
             self.load_board_from_file(board_file)
@@ -47,13 +48,22 @@ class Player:
         move_row = 0 # current placeholder
         move_column = 0 # current placeholder
         return move_row, move_column
-
+    
+    def _get_board(self):
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] != 'O':
+                    self.board_pieces.append([row, col])
+                else:
+                    pass
+        return self.board_pieces
 
     
                
 
     def __str__(self):
         """Return a string representation of the board."""
+        print(self._get_board())
         return "\n".join([" ".join(row) for row in self.board])
 
 if __name__ == "__main__":
